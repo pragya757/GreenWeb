@@ -1,25 +1,35 @@
 services:
-  # Backend Flask Service
+  # ────────────────────────────────────────────────────────────────────────────
+  # 1. Backend: Flask REST API (Render Web Service)
+  # ────────────────────────────────────────────────────────────────────────────
   - type: web
     name: greenweb-api
-    env: python
+    runtime: python
     rootDir: backend
     plan: free
+    region: oregon
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn run:app --bind 0.0.0.0:$PORT
+    healthCheckPath: /api/health
     envVars:
       - key: FLASK_ENV
         value: production
+      - key: FLASK_DEBUG
+        value: "false"
       - key: CORS_ORIGINS
         value: "*"
       - key: DATABASE_URL
         value: sqlite:///greenweb.db
 
-  # Frontend Static Site
+  # ────────────────────────────────────────────────────────────────────────────
+  # 2. Frontend: React + Vite Single Page Application (Render Static Site)
+  # ────────────────────────────────────────────────────────────────────────────
   - type: web
     name: greenweb-frontend
-    env: static
+    runtime: static
     rootDir: frontend
+    plan: free
+    region: oregon
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     routes:
@@ -31,4 +41,4 @@ services:
         fromService:
           type: web
           name: greenweb-api
-          property: host
+          property: url

@@ -6,16 +6,19 @@ Configurable carbon estimation parameters.
 import os
 
 # ── Server ──────────────────────────────────────────────────────────────────
-DEBUG = os.getenv("FLASK_DEBUG", "true").lower() == "true"
+DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
 HOST  = os.getenv("HOST", "0.0.0.0")
 PORT  = int(os.getenv("PORT", 5001))
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*")
 
 # ── Database ─────────────────────────────────────────────────────────────────
-BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-SQLALCHEMY_DATABASE_URI = os.getenv(
-    "DATABASE_URL",
-    f"sqlite:///{os.path.join(BASE_DIR, 'greenweb.db')}"
-)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+_db_url = os.getenv("DATABASE_URL")
+if _db_url and _db_url.startswith("postgres://"):
+    _db_url = _db_url.replace("postgres://", "postgresql://", 1)
+
+# Default to SQLite database located in backend directory
+SQLALCHEMY_DATABASE_URI = _db_url or f"sqlite:///{os.path.join(BASE_DIR, 'greenweb.db')}"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # ── Carbon Estimation Parameters (ILLUSTRATIVE DEFAULTS) ────────────────────

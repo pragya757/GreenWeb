@@ -389,6 +389,40 @@ ENERGY_INTENSITY=0.06 CARBON_INTENSITY=350 PORT=5001 python run.py
 
 ---
 
+---
+
+## 🚀 Deployment on Render (Infrastructure as Code)
+
+GreenWeb is fully configured for zero-configuration full-stack deployment on **[Render.com](https://render.com/)** using the included `render.yaml` Blueprint.
+
+### Services Defined:
+1. **`greenweb-api`** (Render Web Service):
+   - Python / Flask backend executed via **Gunicorn** (`gunicorn run:app --bind 0.0.0.0:$PORT`)
+   - Pre-configured CORS allowing requests from the frontend
+   - Automated health checks at `/api/health`
+2. **`greenweb-frontend`** (Render Static Site):
+   - React + Vite SPA built via `npm install && npm run build`
+   - Automated SPA rewrite rule (`/* -> /index.html`)
+   - Automatically connected to the backend via `VITE_API_BASE` (`fromService.property: url`)
+
+### Deployment Steps:
+1. Log in to [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** > **Blueprint**.
+3. Select and connect your repository: `https://github.com/pragya757/GreenWeb`.
+4. Render will parse `render.yaml` and display both services (`greenweb-api` and `greenweb-frontend`).
+5. Click **Apply**. Render will automatically provision, build, and deploy both services!
+
+---
+
+## 💾 Database Persistence & Render Free Tier Notes
+
+GreenWeb uses **SQLite** by default (`greenweb.db`), which requires zero setup:
+- **Ephemeral Filesystem on Free Tier**: Render's free tier web services use an ephemeral disk. When the free service spins down after 15 minutes of inactivity or when a new deployment occurs, the filesystem is reset to the Git repository state. Any analyses run during the session will be reset upon restart.
+- **Persistent Disk Option (Paid)**: To keep SQLite persistent, attach a Render Persistent Disk (e.g. mounted at `/var/data`) and set `DATABASE_URL=sqlite:////var/data/greenweb.db`.
+- **Render PostgreSQL Option**: Alternatively, provision a Render PostgreSQL instance (or external PostgreSQL) and supply the connection string in the `DATABASE_URL` environment variable. SQLAlchemy supports both SQLite and PostgreSQL out-of-the-box with no code changes needed.
+
+---
+
 ## ⚠️ Limitations
 
 1. A simple HTTP fetch does not download all browser-rendered resources — sub-resource sizes are approximated
@@ -397,6 +431,7 @@ ENERGY_INTENSITY=0.06 CARBON_INTENSITY=350 PORT=5001 python run.py
 4. The environmental score is a project-defined heuristic, not an industry certification
 5. Network-level energy is approximated, not measured
 6. Results should not be used for regulatory reporting or ESG disclosures
+7. SQLite database storage is ephemeral on Render Free Tier (see Database Persistence section above)
 
 ---
 

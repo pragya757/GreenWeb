@@ -15,8 +15,17 @@ def create_app():
     # Load configuration
     app.config.from_pyfile("../config.py", silent=False)
 
-    # Enable CORS for React dev server
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # Enable CORS for deployed frontend and dev server
+    cors_origins = app.config.get("CORS_ORIGINS", "*")
+    if cors_origins != "*":
+        cors_origins = [o.strip() for o in cors_origins.split(",") if o.strip()]
+    CORS(
+        app,
+        resources={r"/*": {"origins": cors_origins}},
+        supports_credentials=True,
+        allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+        methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    )
 
     # Init SQLAlchemy
     db.init_app(app)
@@ -31,6 +40,17 @@ def create_app():
     app.register_blueprint(history_bp,   url_prefix="/api")
     app.register_blueprint(dashboard_bp, url_prefix="/api")
     app.register_blueprint(health_bp,    url_prefix="/api")
+
+    # Root health endpoint in addition to /api/health
+    @app.route("/health", methods=["GET"])
+    def root_health():
+        import datetime
+        from flask import jsonify
+        return jsonify({
+            "status": "ok",
+            "service": "GreenWeb Backend",
+            "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        }), 200
 
     # Create tables
     with app.app_context():
