@@ -38,7 +38,4 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_BASE
-        fromService:
-          type: web
-          name: greenweb-api
-          property: url
+        value: https://greenweb-api.onrender.com

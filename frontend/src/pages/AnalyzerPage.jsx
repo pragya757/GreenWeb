@@ -37,8 +37,14 @@ export default function AnalyzerPage() {
 
     try {
       const response = await analyzeWebsite(url.trim())
+      const data = response.data
+
+      if (!data || typeof data !== 'object' || !data.id) {
+        throw new Error('The server returned an unexpected response. Please try again.')
+      }
+
       addToast('Analysis complete!', 'success')
-      navigate(`/results/${response.data.id}`, { state: { result: response.data } })
+      navigate(`/results/${data.id}`, { state: { result: data } })
     } catch (ex) {
       const msg = ex.response?.data?.error || ex.message || 'Analysis failed. Please try again.'
       setError(msg)

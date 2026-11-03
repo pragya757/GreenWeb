@@ -73,15 +73,41 @@ export default function ResultsPage() {
   const navigate = useNavigate()
   const { addToast } = useToast()
 
-  const [result, setResult] = useState(location.state?.result || null)
-  const [loading, setLoading] = useState(!result)
-  const [error, setError] = useState('')
+  const validStateResult =
+    location.state?.result &&
+    typeof location.state.result === 'object' &&
+    location.state.result.id &&
+    location.state.result.website_url
+      ? location.state.result
+      : null
+
+  const [result, setResult] = useState(validStateResult)
+  const [loading, setLoading] = useState(!validStateResult && Boolean(id && id !== 'undefined'))
+  const [error, setError] = useState(
+    !id || id === 'undefined' ? 'Invalid or missing analysis ID.' : ''
+  )
 
   useEffect(() => {
+    if (!id || id === 'undefined') {
+      setError('Invalid or missing analysis ID.')
+      setLoading(false)
+      return
+    }
     if (!result) {
+      setLoading(true)
       getAnalysis(id)
-        .then(r => setResult(r.data))
-        .catch(() => { setError('Could not load analysis.'); addToast('Failed to load analysis.', 'error') })
+        .then(r => {
+          if (r.data && typeof r.data === 'object' && r.data.id) {
+            setResult(r.data)
+            setError('')
+          } else {
+            setError('Analysis data is not valid.')
+          }
+        })
+        .catch(() => {
+          setError('Could not load analysis report.')
+          addToast('Failed to load analysis.', 'error')
+        })
         .finally(() => setLoading(false))
     }
   }, [id])
@@ -154,7 +180,7 @@ export default function ResultsPage() {
     </div>
   )
 
-  if (error || !result) return (
+  if (error || !result || !result.website_url) return (
     <div className="max-w-xl mx-auto px-4 py-24 text-center">
       <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-4" />
       <h2 className="text-xl font-bold text-gray-900 mb-2">Analysis Not Found</h2>
